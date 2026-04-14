@@ -2,7 +2,30 @@ import cv2 as cv
 import src.constants as c
 
 class PoseVisualizer:
+    """A utility class to visualize pose estimation landmarks on images.
+
+    This class handles the drawing of anatomical landmarks (dots) and connections (lines) 
+    for different pose estimation models using OpenCV. It uses a dispatch table to 
+    support multiple models dynamically.
+
+        Attributes:
+        dot_color (tuple): Color for the landmark dots RGB format.
+        line_color (tuple): Color for the connection lines RGB format.
+        radius (int): Radius of the landmark dots.
+        dot_thickness (int): Thickness of the dots (-1 for filled).
+        line_thickness (int): Thickness of the connection lines.
+    """
+
     def __init__(self, dot_color=(255, 0, 0), line_color=(0, 255, 0), radius = 5, dot_thickness = -1, line_thickness=2):
+        """Initializes the PoseVisualizer with customizable drawing parameters.
+
+        Args:
+            dot_color (tuple, optional): Color for the landmark dots. Defaults to (255, 0, 0).
+            line_color (tuple, optional): Color for the connection lines. Defaults to (0, 255, 0).
+            radius (int, optional): Radius of the landmark dots. Defaults to 5.
+            dot_thickness (int, optional): Thickness of the dots (-1 for filled). Defaults to -1.
+            line_thickness (int, optional): Thickness of the connection lines. Defaults to 2.
+        """
         self.dot_color = dot_color
         self.line_color = line_color
         self.radius = radius
@@ -15,6 +38,16 @@ class PoseVisualizer:
         }
 
     def draw_on_image (self, model_name, image, results):
+        """Dispatches the drawing process to the corresponding model's drawing function.
+
+        Args:
+            model_name (str): The name of the pose estimation model (e.g., 'mediapipe', 'yolo').
+            image (numpy.ndarray): The image frame on which to draw.
+            results (Any): The output results from the pose estimation model.
+
+        Returns:
+            numpy.ndarray: The processed image with drawn landmarks, or the original image if the model is not supported.
+        """
 
         func = self._dispatch_table.get(model_name.lower())
         if func:
@@ -24,6 +57,15 @@ class PoseVisualizer:
             return image
     
     def _draw_on_image_mediapipe(self, image, results): 
+        """Draws MediaPipe pose landmarks and connections on the image.
+
+        Args:
+            image (numpy.ndarray): The image frame to draw on.
+            results (mediapipe.tasks.vision.PoseLandmarkerResult): The results from MediaPipe Pose model.
+
+        Returns:
+            numpy.ndarray: The modified image with MediaPipe landmarks drawn.
+        """
         
         if not results.pose_landmarks:
             print("No pose landmarks detected.")
@@ -57,4 +99,13 @@ class PoseVisualizer:
         return image
 
     def _draw_on_image_yolo(self, image, results):
+        """Draws YOLO pose landmarks and connections on the image.
+        
+        Args:
+            image (numpy.ndarray): The image frame to draw on.
+            results (Any): The results from YOLOv8-pose model.
+
+        Returns:
+            numpy.ndarray: The modified image with YOLO landmarks (Implementation pending).
+        """
         pass
