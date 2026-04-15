@@ -16,6 +16,9 @@ class BasePoseEstimator(ABC):
         
         Args:
             frame (numpy.ndarray): Frame image matrix.
+
+        Returns:
+            This method returns the raw results of the model used.
         """
         pass
 

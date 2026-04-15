@@ -42,7 +42,7 @@ class PoseVisualizer:
 
         Args:
             model_name (str): The name of the pose estimation model (e.g., 'mediapipe', 'yolo').
-            image (numpy.ndarray): The image frame on which to draw.
+            image (array): The image frame on which to draw.
             results (Any): The output results from the pose estimation model.
 
         Returns:
@@ -108,4 +108,39 @@ class PoseVisualizer:
         Returns:
             numpy.ndarray: The modified image with YOLO landmarks (Implementation pending).
         """
-        pass
+        """
+        if results is None or len(results.xyn) == 0:
+            print("No YOLO pose landmarks detected.")
+            return image
+        """
+        height, width, _ = image.shape
+
+        pose_points = c.YOLO_POSE_MAP
+
+
+        for result in results:
+            landmarks = result.keypoints.xyn.cpu().numpy()
+            #It shows only one person detected
+            x = landmarks[0, :, 0]
+            y = landmarks[0, :, 1]
+
+            # Drawing lines
+            for connection in c.POSE_CONNECTIONS:
+                pose_1 = pose_points.get(connection[0])
+                pose_2 =pose_points.get(connection[1])
+                
+                px_x1 = int(x[pose_1] * width)
+                px_y1 = int(y[pose_1] * height)
+                
+                px_x2 = int(x[pose_2] * width)
+                px_y2 = int(y[pose_2] * height)
+
+                cv.line(image, (px_x1, px_y1), (px_x2, px_y2), self.line_color, self.line_thickness)
+
+            # Drawing dots
+            for dot_pose in pose_points.values():
+                px_x = int(x[dot_pose] * width)
+                px_y = int(y[dot_pose] * height)
+
+                cv.circle(image, (px_x, px_y), self.radius, self.dot_color, -1)
+        return image

@@ -1,20 +1,51 @@
 from src.pose_estimators.base_estimator import BasePoseEstimator
+import torch
 
-import numpy as np
 from pathlib import Path
 from ultralytics import YOLO
 
 class YoloPoseEstimator(BasePoseEstimator):
+    """Class for pose estimation using the Ultralytics YOLOv8-pose model.
+
+    It acts as a wrapper on top of the Ultralytics YOLO API. It leverages PyTorch
+    under the hood to perform fast inference on video frames, extracting 2D keypoints
+    for anatomical landmarks.
+
+    Attributes:
+        model (ultralytics.YOLO): The loaded YOLO pose estimation model.
+    """
+
     def __init__(self, model_path: str | Path = Path(__file__).parent.parent.parent.parent / 'models' / 'yolo' / 'yolo26n-pose.pt'):
+        """YoloPoseEstimator constructor.
+
+        Args:
+            model_path (str | Path, optional): Path to the YOLO model's weights file (.pt).
+                By default, it points to 'yolo26n-pose.pt' in the models directory.
+        """
         super().__init__()
         self.model = YOLO(str(model_path))
 
     def process_frame(self, frame, **kwargs):
-        results =  self.model.predict(frame, stream= True)
-        for result in results:
-            if result.keypoints is not None and len(result.keypoints) > 0:
-                return result.keypoints.xyn
-        return None
+        """Processes a single frame to extract pose landmarks.
+
+        Args:
+            frame (numpy.ndarray): The image frame matrix (typically in RGB/BGR format).
+            **kwargs: Additional keyword arguments (ignored in this implementation).
+
+        Returns:
+            list[ultralytics.engine.results.Results]: Results objects containing the detected 
+            bounding boxes and keypoints (due to stream=True).
+        """
+        return self.model.predict(frame, stream= True)
 
     def close(self):
-        pass
+        """
+        Releases the model's resources.
+        
+        Although Python uses Garbage Collection, PyTorch retains VRAM on the GPU.
+        We explicitly empty the CUDA cache to prevent OutOfMemory (OOM) errors 
+        when switching between models during testing.
+        """
+        del self.model
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()

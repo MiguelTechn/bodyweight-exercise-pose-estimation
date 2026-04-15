@@ -14,18 +14,18 @@ MEDIAPIPE_POSE_MAP = {
 }
 
 YOLO_POSE_MAP = {
-    "L_shoulder": 6,
-    "R_shoulder": 7,
-    "L_elbow": 8,
-    "R_elbow": 9,
-    "L_wrist": 10,
-    "R_wrist": 11,
-    "L_hip": 12,
-    "R_hip": 13,
-    "L_knee": 14,
-    "R_knee": 15,
-    "L_ankle": 16,
-    "R_ankle": 17
+    "L_shoulder": 5,
+    "R_shoulder": 6,
+    "L_elbow": 7,
+    "R_elbow": 8,
+    "L_wrist": 9,
+    "R_wrist": 10,
+    "L_hip": 11,
+    "R_hip": 12,
+    "L_knee": 13,
+    "R_knee": 14,
+    "L_ankle": 15,
+    "R_ankle": 16
 }
 
 POSE_CONNECTIONS = [

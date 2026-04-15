@@ -54,3 +54,4 @@ class MediaPipePoseEstimator(BasePoseEstimator):
         It is essential to use this method to free up system resources.
         """
         self.model.close()
+        del self.model

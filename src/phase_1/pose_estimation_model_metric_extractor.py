@@ -2,14 +2,15 @@ import cv2 as cv
 from pathlib import Path
 from src.utils.streamer import VideoStreamer
 from src.utils.visualizer import PoseVisualizer
-from src.mediapipe_pose.mediapipe_estimator import MediaPipePoseEstimator
+from src.pose_estimators.mediapipe_pose.mediapipe_estimator import MediaPipePoseEstimator
+from src.pose_estimators.yolo_pose.yolo_estimator import YoloPoseEstimator
 #from mediapipe.- import 
 #from yolo.- import 
 #from openpose.- import 
 
 def extract_metrics():
 
-    models_test = ["MediaPipe"]
+    models_test = ["mediapipe"]
 
     for model_name in models_test:
 
@@ -25,11 +26,11 @@ def extract_metrics():
         # Visualizer inicialization
         visualizer = PoseVisualizer()
 
-        ia = None
-
         # Model inicialization
-        if model_name == "MediaPipe":
+        if model_name.lower() == "mediapipe":
             ia = MediaPipePoseEstimator()
+        elif model_name.lower() == "yolo":
+            ia = YoloPoseEstimator()
         else:
             raise NotImplementedError(f"The model {model_name} is not implemented yet.")
         
@@ -53,8 +54,8 @@ def extract_metrics():
             timestamp_ms = int(video.get_timestamp())
             
             # Frame processing
-            results = ia.process_frame(rgb_frame, timestamp_ms) 
-
+            results = ia.process_frame(frame=rgb_frame, timestamp_ms=timestamp_ms) 
+            
             # Frame drawing
             final_frame = visualizer.draw_on_image(model_name, rgb_frame, results)
 
@@ -67,6 +68,11 @@ def extract_metrics():
             if cv.waitKey(1) & 0xFF == ord('q'):
                 break
 
+        try:
+            ia.close()
+        except RuntimeError as e:
+            print(f"ERROR: Error {e} closing resources {model_name}")
+            
         video.close()
         cv.destroyAllWindows()
 
