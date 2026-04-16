@@ -1,35 +1,50 @@
 MEDIAPIPE_POSE_MAP = {
-    "L_shoulder": 11,
-    "R_shoulder": 12,
-    "L_elbow": 13,
-    "R_elbow": 14,
-    "L_wrist": 15,
-    "R_wrist": 16,
-    "L_hip": 23,
-    "R_hip": 24,
-    "L_knee": 25,
-    "R_knee": 26,
-    "L_ankle": 27,
-    "R_ankle": 28
+    "left_shoulder": 11,
+    "right_shoulder": 12,
+    "left_elbow": 13,
+    "right_elbow": 14,
+    "left_wrist": 15,
+    "right_wrist": 16,
+    "left_hip": 23,
+    "right_hip": 24,
+    "left_knee": 25,
+    "right_knee": 26,
+    "left_ankle": 27,
+    "right_ankle": 28
 }
 
 YOLO_POSE_MAP = {
-    "L_shoulder": 5,
-    "R_shoulder": 6,
-    "L_elbow": 7,
-    "R_elbow": 8,
-    "L_wrist": 9,
-    "R_wrist": 10,
-    "L_hip": 11,
-    "R_hip": 12,
-    "L_knee": 13,
-    "R_knee": 14,
-    "L_ankle": 15,
-    "R_ankle": 16
+    "left_shoulder": 5,
+    "right_shoulder": 6,
+    "left_elbow": 7,
+    "right_elbow": 8,
+    "left_wrist": 9,
+    "right_wrist": 10,
+    "left_hip": 11,
+    "right_hip": 12,
+    "left_knee": 13,
+    "right_knee": 14,
+    "left_ankle": 15,
+    "right_ankle": 16
+}
+
+COCO_POSE_MAP = {
+    "left_shoulder": 6,
+    "right_shoulder": 7,
+    "left_elbow": 8,
+    "right_elbow": 9,
+    "left_wrist": 10,
+    "right_wrist": 11,
+    "left_hip": 12,
+    "right_hip": 13,
+    "left_knee": 14,
+    "right_knee": 15,
+    "left_ankle": 16,
+    "right_ankle": 17
 }
 
 POSE_CONNECTIONS = [
-    ("L_shoulder", "R_shoulder"), ("L_shoulder", "L_elbow"), ("L_elbow", "L_wrist"), ("R_shoulder", "R_elbow"), ("R_elbow", "R_wrist"), # Arms
-    ("L_shoulder", "L_hip"), ("R_shoulder", "R_hip"), ("L_hip", "R_hip"), # Upper body
-    ("L_hip", "L_knee"), ("L_knee", "L_ankle"), ("R_hip", "R_knee"), ("R_knee", "R_ankle") # Legs
+    ("left_shoulder", "right_shoulder"), ("left_shoulder", "left_elbow"), ("left_elbow", "left_wrist"), ("right_shoulder", "right_elbow"), ("right_elbow", "right_wrist"), # Arms
+    ("left_shoulder", "left_hip"), ("right_shoulder", "right_hip"), ("left_hip", "right_hip"), # Upper body
+    ("left_hip", "left_knee"), ("left_knee", "left_ankle"), ("right_hip", "right_knee"), ("right_knee", "right_ankle") # leftegs
 ]
