@@ -7,7 +7,48 @@ import src.constants as c
 from src.pose_estimators.mediapipe_pose.mediapipe_estimator import MediaPipePoseEstimator
 from src.pose_estimators.yolo_pose.yolo_estimator import YoloPoseEstimator
 
-def extract_metrics():
+def model_init(model_name):
+    if model_name.lower() == "mediapipe":
+        return MediaPipePoseEstimator(video_processing = 'image')
+    elif model_name.lower() == "yolo":
+        return YoloPoseEstimator(video_processing = 'image')
+    else:
+        raise NotImplementedError(f"The model {model_name} is not implemented yet.")
+    
+def generate_results_json(mediapipe_results, yolo_results, image_details):
+
+    mediapipe_keypoints = []
+    # List creation [x,y,visibility/confidence]
+    for landmark in mediapipe_results.pose_landmarks:
+        for keypoint in c.MEDIAPIPE_POSE_MAP.values():
+            mediapipe_keypoints.append([landmark[keypoint].x * image_details[1], landmark[keypoint].y * image_details[2], landmark[keypoint].visibility])
+    
+    yolo_keypoints = []
+    for result in yolo_results:
+        if result.keypoints is not None and len(result.keypoints.data) > 0:
+            landmarks = result.keypoints.xy.cpu().numpy()
+            confidence = result.keypoints.conf.cpu().numpy()
+            #It filter only one person detected
+            x = landmarks[0, :, 0].astype(float)
+            y = landmarks[0, :, 1].astype(float)
+            conf = confidence[0, :].astype(float)
+
+            for keypoint in c.YOLO_POSE_MAP.values():
+                yolo_keypoints.append([x[keypoint] , y[keypoint], conf[keypoint]])
+
+    # data
+    data = {
+            "image_id": image_details[0],
+            "mediapipe": {
+                "keypoints": mediapipe_keypoints
+            },
+            "yolo": {
+                "keypoints": yolo_keypoints
+            }
+        }
+    return data
+
+def main():
 
     # Path to storage results
     results_ann_path = Path(__file__).parent.parent.parent / 'data' / 'coco_dataset' / 'annotations'
@@ -68,51 +109,5 @@ def extract_metrics():
     # json creation
     results_ann_path.write_text(json.dumps(final_json, indent=4))
 
-
-def model_init(model_name):
-    if model_name.lower() == "mediapipe":
-        return MediaPipePoseEstimator(video_processing = 'image')
-    elif model_name.lower() == "yolo":
-        return YoloPoseEstimator(video_processing = 'image')
-    else:
-        raise NotImplementedError(f"The model {model_name} is not implemented yet.")
-    
-def generate_results_json(mediapipe_results, yolo_results, image_details):
-
-    mediapipe_keypoints = []
-    # List creation [x,y,visibility/confidence]
-    for landmark in mediapipe_results.pose_landmarks:
-        for keypoint in c.MEDIAPIPE_POSE_MAP.values():
-            mediapipe_keypoints.append([landmark[keypoint].x * image_details[1], landmark[keypoint].y * image_details[2], landmark[keypoint].visibility])
-    
-    yolo_keypoints = []
-    for result in yolo_results:
-        if result.keypoints is not None and len(result.keypoints.data) > 0:
-            landmarks = result.keypoints.xy.cpu().numpy()
-            confidence = result.keypoints.conf.cpu().numpy()
-            #It filter only one person detected
-            x = landmarks[0, :, 0].astype(float)
-            y = landmarks[0, :, 1].astype(float)
-            conf = confidence[0, :].astype(float)
-
-            for keypoint in c.YOLO_POSE_MAP.values():
-                yolo_keypoints.append([x[keypoint] , y[keypoint], conf[keypoint]])
-
-    # data
-    data = {
-            "image_id": image_details[0],
-            "mediapipe": {
-                "keypoints": [
-                    mediapipe_keypoints
-                ]
-            },
-            "yolo": {
-                "keypoints": [
-                    yolo_keypoints
-                ]
-            }
-        }
-    return data
-
 if __name__ == "__main__":
-    extract_metrics()
+    main()
