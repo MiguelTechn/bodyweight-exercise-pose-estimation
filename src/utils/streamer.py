@@ -44,6 +44,14 @@ class VideoStreamer:
         """
         return self.cap.get(cv.CAP_PROP_FPS)
     
+    def get_total_frames(self):
+        """total frames getter
+
+        Returns:
+            int: video total frames
+        """
+        return self.cap.get(cv.CAP_PROP_FRAME_COUNT)
+    
     def get_timestamp(self):
         """Timestamp of video capture getter
 
