@@ -25,6 +25,20 @@ class YoloPoseEstimator(BasePoseEstimator):
         super().__init__()
         self.model = YOLO(str(model_path))
 
+    def __enter__(self):
+        return self
+        
+    def __exit__(self, exc_type, exc_value, traceback):
+        if hasattr(self, 'model'):
+            del self.model
+        import gc
+        gc.collect()
+        import torch
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        if exc_type is not None:
+            print(f"ERROR: {exc_type} {exc_value} {traceback}")
 
     def process_frame(self, frame, stream: bool = False, **kwargs):
         """Processes a single frame to extract pose landmarks.

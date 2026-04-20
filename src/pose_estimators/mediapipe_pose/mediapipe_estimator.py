@@ -52,6 +52,22 @@ class MediaPipePoseEstimator(BasePoseEstimator):
         else:
             print("video_processing options are 'video', 'image' or 'live'")
 
+    def __enter__(self):
+        return self
+        
+    def __exit__(self, exc_type, exc_value, traceback):
+        if hasattr(self, 'model'):
+            del self.model
+
+        import gc
+        gc.collect()
+
+        self.model.close()
+        del self.model
+
+        if exc_type is not None:
+            print(f"ERROR: {exc_type} {exc_value} {traceback}")
+
     def process_frame(self, frame, timestamp_ms: int = 1, **kwargs):
         """Mediapipe frame processor
 
