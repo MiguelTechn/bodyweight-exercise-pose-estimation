@@ -25,7 +25,8 @@ class YoloPoseEstimator(BasePoseEstimator):
         super().__init__()
         self.model = YOLO(str(model_path))
 
-    def process_frame(self, frame, **kwargs):
+
+    def process_frame(self, frame, stream: bool = False, **kwargs):
         """Processes a single frame to extract pose landmarks.
 
         Args:
@@ -36,7 +37,12 @@ class YoloPoseEstimator(BasePoseEstimator):
             list[ultralytics.engine.results.Results]: Results objects containing the detected 
             bounding boxes and keypoints (due to stream=True).
         """
-        return self.model.predict(frame, stream= True)
+        # If stream is True YOLO manages video more efficiently internally, but it reduces our control.
+        # Enable this feature when you want to automatically paint over video or frames.
+        if stream is True:
+            return self.model.predict(frame, stream = True, show = True)
+        else:
+            return self.model.predict(frame, stream= False)
 
     def close(self):
         """
