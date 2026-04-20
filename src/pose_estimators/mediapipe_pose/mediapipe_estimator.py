@@ -15,7 +15,7 @@ class MediaPipePoseEstimator(BasePoseEstimator):
     Attributes:
         model (mediapipe.tasks.python.vision.PoseLandmarker): Model instance for videoframe processing.
     """
-    def __init__(self, model_path: str | Path = Path(__file__).parent.parent.parent.parent / 'models' / 'mediapipe' / 'pose_landmarker_heavy.task'):
+    def __init__(self, model_path: str | Path = Path(__file__).parent.parent.parent.parent / 'models' / 'mediapipe' / 'pose_landmarker_heavy.task', video_processing: str = 'video'):
         """MediaPipePoseEstimator constructor
 
         Args:
@@ -23,16 +23,34 @@ class MediaPipePoseEstimator(BasePoseEstimator):
             By default, it points to 'pose_landmarker_heavy.task' in the models directory.
         """
         super().__init__()
+        self.video_processing = video_processing.lower()
 
         base_options = python.BaseOptions(model_asset_path=str(model_path))
 
-        landmarker_options = vision.PoseLandmarkerOptions(
-            base_options=base_options,
-            running_mode=vision.RunningMode.VIDEO,
-            output_segmentation_masks=False
-        )
-
-        self.model = vision.PoseLandmarker.create_from_options(landmarker_options)
+        if self.video_processing == 'video':
+            landmarker_options = vision.PoseLandmarkerOptions(
+                base_options=base_options,
+                running_mode=vision.RunningMode.VIDEO,
+                static_image_mode=False,
+                output_segmentation_masks=False
+            )
+            self.model = vision.PoseLandmarker.create_from_options(landmarker_options)
+        elif self.video_processing == 'image':
+            landmarker_options = vision.PoseLandmarkerOptions(
+                base_options=base_options,
+                running_mode=vision.RunningMode.IMAGE,
+                output_segmentation_masks=False
+            )
+            self.model = vision.PoseLandmarker.create_from_options(landmarker_options)
+        elif self.video_processing == 'live':
+            landmarker_options = vision.PoseLandmarkerOptions(
+                base_options=base_options,
+                running_mode=vision.RunningMode.LIVE_STREAM,
+                output_segmentation_masks=False
+            )
+            self.model = vision.PoseLandmarker.create_from_options(landmarker_options)
+        else:
+            print("video_processing options are 'video', 'image' or 'live'")
 
     def process_frame(self, frame, timestamp_ms: int = 1, **kwargs):
         """Mediapipe frame processor
@@ -46,8 +64,12 @@ class MediaPipePoseEstimator(BasePoseEstimator):
             mp.tasks.vision.PoseLandmarkerResult: Object with detected landmarks 
                 (2D coordinates in image and 3D in the real world).
         """
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)  
-        return self.model.detect_for_video(mp_image, timestamp_ms)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame) 
+        if self.video_processing in ['video', 'live']:
+            return self.model.detect_for_video(mp_image, timestamp_ms)
+        else:
+            return self.model.detect(mp_image)
+
 
     def close(self):
         """Close and release resources
