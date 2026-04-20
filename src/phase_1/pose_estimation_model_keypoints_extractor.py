@@ -1,6 +1,5 @@
 import cv2 as cv
 import json
-import numpy as np
 from pathlib import Path
 
 import src.constants as c
@@ -11,7 +10,7 @@ def model_init(model_name):
     if model_name.lower() == "mediapipe":
         return MediaPipePoseEstimator(video_processing = 'image')
     elif model_name.lower() == "yolo":
-        return YoloPoseEstimator(video_processing = 'image')
+        return YoloPoseEstimator()
     else:
         raise NotImplementedError(f"The model {model_name} is not implemented yet.")
     
@@ -49,13 +48,11 @@ def generate_results_json(mediapipe_results, yolo_results, image_details):
     return data
 
 def main():
-
     # Path to storage results
     results_ann_path = Path(__file__).parent.parent.parent / 'data' / 'coco_dataset' / 'annotations'
     results_ann_path.mkdir(parents=True, exist_ok=True)
 
     results_ann_path = results_ann_path / 'results_pose_models.json'
-    #results_ann_path.write_text('[]')
 
     final_json = []
 
@@ -87,7 +84,7 @@ def main():
         
         # Mediapipa image processing
         print(f"Precision data extraction of [mediapipe] model, for image {images[image_it]['file_name']}")
-        mediapipe_results = mediapipe.process_frame(frame=rgb_image, )
+        mediapipe_results = mediapipe.process_frame(frame=rgb_image)
 
         print(f"Precision data extraction of [yolo] model, for image {images[image_it]['file_name']}")
         yolo_results = yolo.process_frame(frame=rgb_image)
