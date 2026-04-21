@@ -24,6 +24,14 @@ class VideoStreamer:
         if not self.cap.isOpened():
             raise ValueError(f"The vídeo can't be oppened: {source}")
 
+    def video_rewind(self, frame_position: int = 0):
+        """Video rewinder to the frame introduced as a parameter
+
+        Args:
+            frame_position (int, optional): To set the frame position in the video. Defaults to 0 (initials position).
+        """
+        self.cap.set(cv.CAP_PROP_POS_FRAMES, frame_position)
+
     def get_frame(self):
         """getter of current frame image
 
@@ -48,7 +56,7 @@ class VideoStreamer:
         """total frames getter
 
         Returns:
-            int: video total frames
+            float: video total frames
         """
         return self.cap.get(cv.CAP_PROP_FRAME_COUNT)
     
@@ -59,7 +67,14 @@ class VideoStreamer:
             float: video timestamp
         """
         return self.cap.get(cv.CAP_PROP_POS_MSEC)
+    
+    def get_frame_position(self):
+        """Frame position getter
 
+        Returns:
+            float: video frame position
+        """
+        return self.cap.get(cv.CAP_PROP_POS_FRAMES)
 
     def close(self):
         """Close and release of resources
