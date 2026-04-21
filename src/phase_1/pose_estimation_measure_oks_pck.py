@@ -12,8 +12,6 @@ def calculate_oks(euclidean_distances, scale, visibilities):
     # You can find the OKS formula in README.md
     return (np.exp((-np.square(euclidean_distances))/(2 * np.square(scale) * np.square(sigmas))) * visibilities) / visibilities
 
-    
-
 def calculate_pck(euclidean_distances, gt_keypoints, tolerance = 0.2):
     # -6 to get the first element of gt_keypoints -6 = - c.COCO_POSE_MAP.values()[0]
     left_shoulder_index = c.COCO_POSE_MAP["left_shoulder"] - 6
@@ -109,11 +107,8 @@ def main():
             })
 
     results_dataframe = pd.DataFrame(results)
-    print(results_dataframe[results_dataframe['image_id'] == 492758])
-            # image_id, model_name, keypoint_name, visibility, distance, oks_score, pck
+    # image_id, model_name, keypoint_name, visibility, distance, oks_score, pck
     results_dataframe.to_csv(final_results_path / 'results_oks_pck.csv', index=False)
-
-
 
 if __name__ == "__main__":
     main()
