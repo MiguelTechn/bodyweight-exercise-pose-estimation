@@ -26,37 +26,56 @@ class YoloPoseEstimator(BasePoseEstimator):
         self.model = YOLO(str(model_path))
 
     def __enter__(self):
+        """Initializes the context manager for the pose estimator.
+
+        This allows the `YoloPoseEstimator` to be used within a `with`
+        statement, ensuring that resources are managed automatically.
+
+        Returns:
+            YoloPoseEstimator: The instance of the estimator.
+        """
         return self
         
     def __exit__(self, exc_type, exc_value, traceback):
-        if hasattr(self, 'model'):
-            del self.model
+        """Cleans up resources when the context is exited.
+
+        This method is called automatically when leaving a `with` block. It
+        ensures that the underlying YOLO model and PyTorch resources are freed up
+        from memory. It also handles printing any exceptions that occurred within the block.
+
+        Args:
+            exc_type: The type of the exception, if any.
+            exc_value: The exception instance, if any.
+            traceback: The traceback object, if any.
+        """
+        self.close()
+
         import gc
         gc.collect()
-        import torch
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
 
         if exc_type is not None:
             print(f"ERROR: {exc_type} {exc_value} {traceback}")
 
-    def process_frame(self, frame, stream: bool = False, **kwargs):
+    def process_frame(self, frame, stream: bool = False, verbose: bool = False, **kwargs):
         """Processes a single frame to extract pose landmarks.
 
         Args:
             frame (numpy.ndarray): The image frame matrix (typically in RGB/BGR format).
-            **kwargs: Additional keyword arguments (ignored in this implementation).
+            stream (bool, optional): Whether to use the streaming mode for the predictor. Defaults to False.
+            verbose (bool, optional): Whether to print inference details to the console. Defaults to False.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             list[ultralytics.engine.results.Results]: Results objects containing the detected 
             bounding boxes and keypoints (due to stream=True).
         """
+        kwargs.pop('timestamp_ms', None)
         # If stream is True YOLO manages video more efficiently internally, but it reduces our control.
         # Enable this feature when you want to automatically paint over video or frames.
         if stream is True:
-            return self.model.predict(frame, stream = True, show = True)
+            return self.model.predict(frame, stream = stream, verbose = verbose, **kwargs)
         else:
-            return self.model.predict(frame, stream= False)
+            return self.model.predict(frame, stream = stream, verbose = verbose, **kwargs)
 
     def close(self):
         """
@@ -66,6 +85,8 @@ class YoloPoseEstimator(BasePoseEstimator):
         We explicitly empty the CUDA cache to prevent OutOfMemory (OOM) errors 
         when switching between models during testing.
         """
-        del self.model
+        if hasattr(self, 'model'):
+            del self.model
+
         if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+                torch.cuda.empty_cache()

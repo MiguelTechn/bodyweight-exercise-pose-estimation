@@ -31,7 +31,6 @@ class MediaPipePoseEstimator(BasePoseEstimator):
             landmarker_options = vision.PoseLandmarkerOptions(
                 base_options=base_options,
                 running_mode=vision.RunningMode.VIDEO,
-                static_image_mode=False,
                 output_segmentation_masks=False
             )
             self.model = vision.PoseLandmarker.create_from_options(landmarker_options)
@@ -53,28 +52,43 @@ class MediaPipePoseEstimator(BasePoseEstimator):
             print("video_processing options are 'video', 'image' or 'live'")
 
     def __enter__(self):
+        """Initializes the context manager for the pose estimator.
+
+        This allows the `MediaPipePoseEstimator` to be used within a `with`
+        statement, ensuring that resources are managed automatically.
+
+        Returns:
+            MediaPipePoseEstimator: The instance of the estimator.
+        """
         return self
         
     def __exit__(self, exc_type, exc_value, traceback):
-        if hasattr(self, 'model'):
-            del self.model
+        """Cleans up resources when the context is exited.
+
+        This method is called automatically when leaving a `with` block. It
+        ensures that the underlying MediaPipe model is closed, freeing up
+        memory and other system resources. It also handles printing any
+        exceptions that occurred within the block.
+
+        Args:
+            exc_type: The type of the exception, if any.
+            exc_value: The exception instance, if any.
+            traceback: The traceback object, if any.
+        """
+        self.close()
 
         import gc
         gc.collect()
 
-        self.model.close()
-        del self.model
-
         if exc_type is not None:
             print(f"ERROR: {exc_type} {exc_value} {traceback}")
 
-    def process_frame(self, frame, timestamp_ms: int = 1, **kwargs):
+    def process_frame(self, frame, **kwargs):
         """Mediapipe frame processor
 
         Args:
             frame (numpy.ndarray): Matrix of the frame image, preferably in RGB format.
-            timestamp_ms (int, optional): Frame timestamp in milliseconds. 
-                It should be monotonically increasing in video mode for temporal coherence. By default it is 1.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             mp.tasks.vision.PoseLandmarkerResult: Object with detected landmarks 
@@ -82,14 +96,15 @@ class MediaPipePoseEstimator(BasePoseEstimator):
         """
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame) 
         if self.video_processing in ['video', 'live']:
-            return self.model.detect_for_video(mp_image, timestamp_ms)
+            return self.model.detect_for_video(mp_image, **kwargs)
         else:
-            return self.model.detect(mp_image)
+            return self.model.detect(mp_image, **kwargs)
 
 
     def close(self):
         """Close and release resources
         It is essential to use this method to free up system resources.
         """
-        self.model.close()
-        del self.model
+        if hasattr(self, 'model'):
+            self.model.close()
+            del self.model
