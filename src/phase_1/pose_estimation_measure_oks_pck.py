@@ -10,7 +10,10 @@ def calculate_oks(euclidean_distances, scale, visibilities):
     sigmas = np.array([.79, .79, .72, .72, .62,.62, 1.07, 1.07, .87, .87, .89, .89])/10.0
 
     # You can find the OKS formula in README.md
-    return (np.exp((-np.square(euclidean_distances))/(2 * np.square(scale) * np.square(sigmas))) * visibilities) / visibilities
+    exponent = -np.square(euclidean_distances) / (2 * np.square(scale) * np.square(sigmas))
+    
+    return np.where(visibilities > 0, np.exp(exponent), 0.0)
+    
 
 def calculate_pck(euclidean_distances, gt_keypoints, tolerance = 0.2):
     # -6 to get the first element of gt_keypoints -6 = - c.COCO_POSE_MAP.values()[0]
@@ -68,8 +71,8 @@ def main():
         pred_mediapipe_v = xyv_mediapipe[:, 2:3]
         pred_yolo_v = xyv_yolo[:, 2:3]
 
-        pred_mediapipe_v = [1 if k > 0.5 else 0 for k in pred_mediapipe_v]
-        pred_yolo_v = [1 if k > 0.5 else 0 for k in pred_yolo_v]
+        pred_mediapipe_v = np.array([1 if k > 0.5 else 0 for k in pred_mediapipe_v])
+        pred_yolo_v = np.array([1 if k > 0.5 else 0 for k in pred_yolo_v])
 
         #OKS calculations
         mediapipe_oks = calculate_oks(euclidean_distance_mediapipe, scale, pred_mediapipe_v)
@@ -79,9 +82,9 @@ def main():
         mediapipe_pck = calculate_pck(euclidean_distance_mediapipe, gt_xy, 0.2)
         yolo_pck = calculate_pck(euclidean_distance_yolo, gt_xy, 0.2)
 
-        for keypoint_it in range(len(coco_annotations_ann[image_it]['keypoints'])):
-            image_id = coco_annotations_ann[image_it]['image_id']
-            
+        image_id = coco_annotations_ann[image_it]['image_id']
+
+        for keypoint_it in range(len(coco_annotations_ann[image_it]['keypoints'])):            
             # Element 6 is the first element of COCO_POSE_MAP
             keypoint_name = coco_pose_map_inverted[keypoint_it]
             
