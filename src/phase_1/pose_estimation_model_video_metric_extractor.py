@@ -98,11 +98,6 @@ def main():
     fps_results = []
     hardware_results = []
 
-    cpu_usage = []
-    ram_used_gb = []
-    gpu_usage = []
-    vram_used_gb = []
-
     # Path to storage results
     final_results_path = Path(__file__).parent.parent.parent / 'results' / 'phase_1'
     final_results_path.mkdir(parents=True, exist_ok=True)
@@ -125,6 +120,10 @@ def main():
                 # Model inicialization
                 with model_init(model_name) as ia:
                     print(f"Performance test of {model_name} model")
+                    cpu_usage = []
+                    ram_used_gb = []
+                    gpu_usage = []
+                    vram_used_gb = []
                     
                     # To calculate fps
                     fps_time_start = time.perf_counter()
@@ -190,11 +189,6 @@ def main():
                         "gpu_%": sum(gpu_usage) / len(gpu_usage),
                         "vram_gb": sum(vram_used_gb) / len(vram_used_gb)
                     })
-                    
-                    cpu_usage = []
-                    ram_used_gb = []
-                    gpu_usage = []
-                    vram_used_gb = []
                     
                     # Rewind to the beginning of the video
                     videoStreamer.video_rewind()
