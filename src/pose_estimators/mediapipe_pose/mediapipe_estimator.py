@@ -83,7 +83,7 @@ class MediaPipePoseEstimator(BasePoseEstimator):
         if exc_type is not None:
             print(f"ERROR: {exc_type} {exc_value} {traceback}")
 
-    def process_frame(self, frame, **kwargs):
+    def process_frame(self, frame, timestamp_ms=None, **kwargs):
         """Mediapipe frame processor
 
         Args:
@@ -96,7 +96,7 @@ class MediaPipePoseEstimator(BasePoseEstimator):
         """
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame) 
         if self.video_processing in ['video', 'live']:
-            return self.model.detect_for_video(mp_image, **kwargs)
+            return self.model.detect_for_video(mp_image, timestamp_ms, **kwargs)
         else:
             return self.model.detect(mp_image, **kwargs)
 
