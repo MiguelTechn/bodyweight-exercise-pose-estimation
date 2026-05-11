@@ -48,3 +48,14 @@ POSE_CONNECTIONS = [
     ("left_shoulder", "left_hip"), ("right_shoulder", "right_hip"), ("left_hip", "right_hip"), # Upper body
     ("left_hip", "left_knee"), ("left_knee", "left_ankle"), ("right_hip", "right_knee"), ("right_knee", "right_ankle") # leftegs
 ]
+
+ADJACENCY_MAP = {
+    "left_shoulder": ["left_hip", "left_elbow"],
+    "right_shoulder": ["right_hip", "right_elbow"],
+    "left_elbow": ["left_shoulder", "left_wrist"],
+    "right_elbow": ["right_shoulder", "right_wrist"],
+    "left_hip": ["left_shoulder", "left_knee"],
+    "right_hip": ["right_shoulder", "right_knee"],
+    "left_knee": ["left_hip", "left_ankle"],
+    "right_knee": ["right_hip", "right_ankle"]
+}
