@@ -6,82 +6,12 @@ import re
 from pathlib import Path
 from src.utils.streamer import VideoStreamer
 from src.pose_estimators.mediapipe_pose.mediapipe_estimator import MediaPipePoseEstimator
+from src.pose_normalizer import PoseNormalizer
 import src.constants as c
 
-def angle_calculation(landmark, k_name, k_value):
-    # Vector calculation (Vert - AdjacentJoint)
-    k_point1 = c.MEDIAPIPE_POSE_MAP[c.ADJACENCY_MAP[k_name][0]]
-    vert_point1 = np.array([landmark[k_value].x, landmark[k_value].y, landmark[k_value].z]) - \
-        np.array([landmark[k_point1].x, landmark[k_point1].y, landmark[k_point1].z])
-    
-    k_point2 = c.MEDIAPIPE_POSE_MAP[c.ADJACENCY_MAP[k_name][1]]
-    vert_point2 = np.array([landmark[k_value].x, landmark[k_value].y, landmark[k_value].z]) - \
-        np.array([landmark[k_point2].x, landmark[k_point2].y, landmark[k_point2].z])
-    
-    # Scalar product 
-    dot_product = np.dot(vert_point1, vert_point2)
-
-    # Vector magnitudes
-    magnitude1 = np.linalg.norm(vert_point1)
-    magnitude2 = np.linalg.norm(vert_point2)
-
-    # Cos vertex calculation
-    cos = dot_product / (magnitude1 * magnitude2)
-    cos = np.clip(cos, -1.0, 1.0)
-
-    # Angle calculation
-    angle_rad = np.arccos(cos)
-    return np.degrees(angle_rad)
-
-def geometric_normalization(results):
-    if not results.pose_world_landmarks:
-        print("No pose landmarks detected.")
-        return None
-    
-    normalized_landmarks = []   
-    
-    # Shoulders center calculations
-    left_shoulder = np.array([
-        results.pose_world_landmarks[0][c.MEDIAPIPE_POSE_MAP['left_shoulder']].x,
-        results.pose_world_landmarks[0][c.MEDIAPIPE_POSE_MAP['left_shoulder']].y,
-        results.pose_world_landmarks[0][c.MEDIAPIPE_POSE_MAP['left_shoulder']].z
-    ])
-    
-    right_shoulder = np.array([
-        results.pose_world_landmarks[0][c.MEDIAPIPE_POSE_MAP['right_shoulder']].x,
-        results.pose_world_landmarks[0][c.MEDIAPIPE_POSE_MAP['right_shoulder']].y,
-        results.pose_world_landmarks[0][c.MEDIAPIPE_POSE_MAP['right_shoulder']].z
-    ])
-
-    mid_shoulder = (left_shoulder + right_shoulder) / 2.0
-
-    # Torso len (MidShoulder(x,y,z) - MidHip(0,0,0))
-    torso_len = np.linalg.norm(mid_shoulder)
-
-    landmark = results.pose_world_landmarks[0]
-
-    for k_name, k_value in c.MEDIAPIPE_POSE_MAP.items():
-        # Keypoint presence threshold. If it is less than 0.5, discard the frame
-        if landmark[k_value].presence < 0.5:
-            return None
-
-        # Angles calculations        
-        if k_name in c.ADJACENCY_MAP.keys():
-            normalized_landmarks.append(angle_calculation(landmark, k_name, k_value))
-
-        # Keypoint normalization
-        xn = landmark[k_value].x / torso_len
-        yn = landmark[k_value].y / torso_len
-        zn = landmark[k_value].z / torso_len
-
-        normalized_landmarks.extend([xn, yn, zn, landmark[k_value].visibility])
-    
-    return normalized_landmarks
-
 def main():
-    
     # ___________Column names____________
-    columm_names = ["subject_id", "window_id", "frame_window_id"]
+    columm_names = ["subject_id", "video_id", "window_id", "frame_window_id"]
     for k_name, k_value in c.MEDIAPIPE_POSE_MAP.items():
         if k_name in c.ADJACENCY_MAP.keys():
             columm_names.append(f"angle_{k_name}")
@@ -132,12 +62,15 @@ def main():
             else:
                 subject_id = "NA"
                 action_name = "NA"
-
+            video_name = video.name
             window_id_num = 1
             wind_id = subject_id + action_name + "_" + str(window_id_num)
             frame_window_id = 1
 
-            #For frame imputation
+            # Landmarks normalizer
+            pose_normalizer = PoseNormalizer()
+
+            # For frame imputation
             last_valid_keypoints = None
 
             # Model inicialization
@@ -164,17 +97,18 @@ def main():
                     results = ia.process_frame(rgb_frame, timestamp_ms)
 
                     # Geometric normalization and angles calculations                    
-                    keypoints_list = geometric_normalization(results)
+                    keypoints_list = pose_normalizer.process_and_normalize(results)
                     if keypoints_list is None: 
                         none_counter += 1
                         print(f"|--------Returned None Frame: {videoStreamer.get_frame_position()}. None Counter: {none_counter}")
-                        #If 0.15sec between frames discard window
+                        #If 0.10sec between valid frames discard window
                         if none_counter >= 5:
                             print(f"|--------Discarding window: {wind_id}")
                             none_counter = 0
                             sliding_window = []
                             frame_window_id = 1
                             last_valid_keypoints = None
+                            pose_normalizer = PoseNormalizer() # Reseteo de memoria EMA y Oclusiones
                             continue
                             
                         # Fill with the last known valid frame.
@@ -188,7 +122,7 @@ def main():
                         last_valid_keypoints = keypoints_list
                     
                     # Line structure
-                    line = [subject_id, wind_id, frame_window_id] + keypoints_list + [video.parent.name]
+                    line = [subject_id, video_name, wind_id, frame_window_id] + keypoints_list + [video.parent.name]
                     
                     # Sliding window management
                     sliding_window.append(line)
@@ -200,7 +134,7 @@ def main():
                         window_id_num += 1
                         wind_id = subject_id + action_name + "_" + str(window_id_num)
         
-                        sliding_window = [[line[0], wind_id, line[2] - 30] + line[3:] for line in sliding_window[30:]]
+                        sliding_window = [[line[0], line[1], wind_id, line[3] - 30] + line[4:] for line in sliding_window[30:]]
                     
                         frame_window_id = 31
                         continue
