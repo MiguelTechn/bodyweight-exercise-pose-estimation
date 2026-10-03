@@ -2,36 +2,69 @@ import src.constants as c
 import numpy as np
 
 class PoseEvaluator:
+    """
+    Evaluates the quality of an exercise performance based on pose data.
+
+    This class uses a set of rule-based heuristics to provide real-time feedback
+    on the user's form for specific exercises like push-ups and squats.
+    It takes a list of normalized keypoints and the name of the classified exercise,
+    then returns a feedback string.
+    """
+
     def __init__(self, col_names):
+        """
+        Initializes the PoseEvaluator.
+
+        Args:
+            col_names (list[str]): A list of column names that corresponds to the
+                                   structure of the input keypoints list. This is
+                                   used to parse the incoming data correctly.
+        """
         self.col_names = col_names
         self.angle_index_map = {clave: i for i, clave in enumerate(c.ADJACENCY_MAP.keys())}
+
+        # Dispatch table to map exercise names to their corresponding evaluation function.
+        # This makes the system easily extensible with new exercises.
         self._dispatch_table = {
             "pushups": self._pushup_evaluator,
             "bodyweightsquats": self._bodyweightsquat_evaluator
         }
 
     def evaluate(self, keypoints_list, class_name):
+        """
+        Main evaluation method that dispatches to the correct exercise evaluator.
+
+        Args:
+            keypoints_list (list[float]): A flat list containing angle and coordinate
+                                          data for a single frame.
+            class_name (str): The name of the exercise to evaluate (e.g., "PushUps").
+
+        Returns:
+            str | None: A string with feedback on the user's form, or None if the
+                        exercise is not supported.
+        """        
         func = self._dispatch_table.get(class_name.lower())
         
         if func:
-            col_list = []
+            angle_list = []
             k_list = []
 
             for i, col_name in enumerate(self.col_names):
                 if col_name.startswith("angle_"):
-                    col_list.append(keypoints_list[i])
+                    angle_list.append(keypoints_list[i])
                 else:
                     k_list.append(keypoints_list[i])
 
-            return func(col_list, k_list)
+            return func(angle_list, k_list)
         else:
             print(f"Error: Exercise '{class_name}' is not supported.")
 
-    def _pushup_evaluator(self, col_list, k_list):
+    def _pushup_evaluator(self, angle_list, k_list):
+        """Evaluates push-up form based on angles and keypoint distances."""
         # Angles evaluator
-        if col_list[self.angle_index_map["left_shoulder"]] > 70 or col_list[self.angle_index_map["right_shoulder"]] > 70:
+        if angle_list[self.angle_index_map["left_shoulder"]] > 70 or angle_list[self.angle_index_map["right_shoulder"]] > 70:
             return "Shoulder angle exceeded. Bring your elbows close to your shoulders"
-        elif col_list[self.angle_index_map["left_hip"]] > 195 or col_list[self.angle_index_map["left_hip"]] < 165:
+        elif angle_list[self.angle_index_map["left_hip"]] > 195 or angle_list[self.angle_index_map["left_hip"]] < 165:
             return "Hip angle too high or too low. Flat your body"
         
         # Keypoints x,y,z Based on c.MEDIAPIPE_POSE_MAP
@@ -51,11 +84,12 @@ class PoseEvaluator:
         
         return "Good execution"
 
-    def _bodyweightsquat_evaluator(self, col_list, k_list):
+    def _bodyweightsquat_evaluator(self, angle_list, k_list):
+        """Evaluates _bodyweightsquat_evaluator form based on angles and keypoint distances."""
         # Angles evaluator
-        if col_list[self.angle_index_map["left_knee"]] < 50 or col_list[self.angle_index_map["right_knee"]] < 50:
+        if angle_list[self.angle_index_map["left_knee"]] < 50 or angle_list[self.angle_index_map["right_knee"]] < 50:
             return "Knee angle exceeded. Don't squat down too low"
-        elif col_list[self.angle_index_map["left_hip"]] < 50 or col_list[self.angle_index_map["right_hip"]] < 50:
+        elif angle_list[self.angle_index_map["left_hip"]] < 50 or angle_list[self.angle_index_map["right_hip"]] < 50:
             return "Hip angle exceeded. Don't go down so steeply"
 
         # Keypoints x,y,z Based on c.MEDIAPIPE_POSE_MAP

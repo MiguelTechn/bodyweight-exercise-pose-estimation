@@ -5,11 +5,38 @@ from src.utils.ema_filter import EMASmoother
 import src.constants as c
 
 class PoseNormalizer:
+    """
+    A class to process and normalize pose landmarks from MediaPipe.
+
+    This class is responsible for several key steps in the feature engineering pipeline:
+    1.  Smoothing: Applies an Exponential Moving Average (EMA) filter to reduce jitter.
+    2.  Sanity Checks: Validates frame quality by checking keypoint visibility and presence.
+    3.  Normalization: Makes the pose data scale-invariant by normalizing against torso length.
+    4.  Feature Augmentation: Calculates joint angles to create powerful biomechanical features.
+    """
     def __init__(self, apply_smoothing=True):
+        """
+        Initializes the PoseNormalizer.
+
+        Args:
+            apply_smoothing (bool): If True, EMA filters will be applied to the landmarks
+                                    and the torso scale factor.
+        """
         self.smoother = EMASmoother() if apply_smoothing else None
         self.torso_smoother = EMASmoother(frames_number=39) if apply_smoothing else None # alpha ≈ 0.05
     
     def _calculate_angle(self, landmarks_matrix, k_name, k_value):
+        """
+        Calculates the angle of a joint using the dot product of two vectors.
+
+        Args:
+            landmarks_matrix (np.ndarray): The matrix of all pose landmarks.
+            k_name (str): The name of the joint for which to calculate the angle (e.g., "left_elbow").
+            k_value (int): The index of the joint in the landmarks_matrix.
+
+        Returns:
+            float: The calculated angle in degrees.
+        """
         k_name_list = list(c.MEDIAPIPE_POSE_MAP.keys())
         # Vector calculation (Vert - AdjacentJoint)
         k_point1 = k_name_list.index(c.ADJACENCY_MAP[k_name][0])
@@ -34,6 +61,19 @@ class PoseNormalizer:
         return np.degrees(angle_rad)
 
     def process_and_normalize(self, results):
+        """
+        Main processing function that takes raw MediaPipe results and returns a
+        normalized and augmented feature list.
+
+        Args:
+            results (mediapipe.tasks.vision.PoseLandmarkerResult): The output from the
+                                                                   MediaPipe PoseLandmarker.
+
+        Returns:
+            list[float] | None: A flat list containing angles and normalized coordinates
+                                (x, y, z, visibility) for each keypoint, or None if the
+                                frame is deemed invalid.
+        """
         if not results.pose_world_landmarks:
             return None
             
