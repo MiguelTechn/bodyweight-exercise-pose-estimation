@@ -4,6 +4,14 @@
 
 conda env create -f environment.yml
 
+## How to use
+
+With the github project downloaded and having models\mediapipe\pose_landmarker_heavy.task, models\rf_classifier\rf_model.joblib and folder src:
+
+    python -m src.main
+
+To finalize the program just press "q".
+
 ## PoseVisualizer
 
 For mediapipe:
@@ -108,3 +116,7 @@ $EMA_t$: This is the clean prediction or smoothed position in the current frame.
 $x_t$: This is the raw, noisy measurement just given to you by the camera in this frame.
 $EMA_{t-1}$: This is the smoothed value you calculated in the previous frame (this is where the filter's "memory" resides).
 $\alpha$ (Alpha): This is the "Smoothing Factor," a number between 0 and 1. It's the heart of the algorithm.
+
+** This documentation is not fully completed but is the basics to understand the fundamentals behind the code. **
+
+** Please, if you have doubts or any sugestion you can contact me througth [Linkedin](www.linkedin.com/in/miguel-ángel-lópez) **
