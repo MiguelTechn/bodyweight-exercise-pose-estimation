@@ -13,7 +13,7 @@ This project has enabled the development of software from the ground up. During 
 
 ## Arquitecture
 
-![alt text](resources\architecture.png)
+![Arquitecture Map](resources/architecture.png)
 
 ## Enviroment creation
 
@@ -33,9 +33,9 @@ To finalize the program just press "q".
 
 For mediapipe:
 
-$x_{px}, y_{px}$
-$$x_{pixel} = \text{int}(x_{normalized} \cdot \text{image\_width})$$
-$$y_{pixel} = \text{int}(y_{normalized} \cdot \text{image\_height})$$
+$x_{\text{px}}, y_{\text{px}}$
+$$x_{\text{pixel}} = \text{int}(x_{\text{normalized}} \cdot \text{image\_width})$$
+$$y_{\text{pixel}} = \text{int}(y_{\text{normalized}} \cdot \text{image\_width})$$
 
 ### Precision metrics
 
