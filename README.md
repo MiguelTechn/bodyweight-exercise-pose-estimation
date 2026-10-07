@@ -33,9 +33,10 @@ To finalize the program just press "q".
 
 For mediapipe:
 
-$x_{\text{px}}, y_{\text{px}}$
-$$x_{\text{pixel}} = \text{int}(x_{\text{normalized}} \cdot \text{image\_width})$$
-$$y_{\text{pixel}} = \text{int}(y_{\text{normalized}} \cdot \text{image\_width})$$
+$x_{px}, y_{px}$
+$$x_{pixel} = int(x_{normalized} \cdot imageWidth)$$
+
+$$y_{pixel} = int(y_{normalized} \cdot imageWidth)$$
 
 ### Precision metrics
 
