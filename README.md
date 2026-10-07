@@ -1,5 +1,20 @@
 # bodyweight-exercise-pose-estimation
 
+## Abstract
+
+The project involves the development of a system for correcting bodyweight exercises. This system is capable of recognising push-ups and squats and distinguishing these movements from typical actions in a sports setting.
+
+The aim behind building the prototype is to provide a sports tool that end-users can rely on for their training sessions. This is particularly useful in helping novice athletes maintain correct technique through visual feedback on the screen.
+For its development, a methodology based on experimentation was followed, allowing for methodological and conceptual errors to refine the system.
+
+The result is a basic, functional application for the automatic detection and correction of bodyweight squats and push-ups. This application can be improved in the future by adding, amongst other features, a graphical interface, a greater variety of exercises, or enhanced accuracy and user feedback.
+
+This project has enabled the development of software from the ground up. During this process, a real-world need was identified, solutions were proposed, and data mining and artificial intelligence model training techniques were studied and implemented, achieving an adequate and functional result within a reasonable timeframe.
+
+## Arquitecture
+
+![alt text](resources\architecture.png)
+
 ## Enviroment creation
 
 conda env create -f environment.yml
@@ -12,7 +27,9 @@ With the github project downloaded and having models\mediapipe\pose_landmarker_h
 
 To finalize the program just press "q".
 
-## PoseVisualizer
+## Theorical Aspects
+
+### PoseVisualizer
 
 For mediapipe:
 
@@ -20,7 +37,7 @@ $x_{px}, y_{px}$
 $$x_{pixel} = \text{int}(x_{normalized} \cdot \text{image\_width})$$
 $$y_{pixel} = \text{int}(y_{normalized} \cdot \text{image\_height})$$
 
-## Precision metrics
+### Precision metrics
 
 Object Keypoint Similarity (OKS):
 
@@ -59,15 +76,15 @@ $d_{norm}$: Normalization distance (e.g., size of the diagonal bounding box, or 
 
 $T$: Tolerance threshold (e.g., $0.2$, which means 20% of $d_{norm}$).
 
-## Hardware metrics
+### Hardware metrics
 
-### Processing Performance
+#### Processing Performance
 
 * **Inference Latency**: This is the exact time it takes the neural network to perform mathematical calculations.
 
 * **FPS (Frames Per Second)**: Complete cycles (End-to-End Latency) your computer can do in exactly one second.
 
-### Resource Consumption
+#### Resource Consumption
 
 * **CPU Usage (%)**: How much of the main processor's capacity is being used.
 
@@ -78,9 +95,9 @@ $T$: Tolerance threshold (e.g., $0.2$, which means 20% of $d_{norm}$).
 * **VRAM Usage (MB/GB)**: Video memory used if running on the GPU.
 
 
-## Phase 2
+### Phase 2
 
-### Angle Calculation
+#### Angle Calculation
 
 **Joint Vector:**
 Vector Vertex B to Joint A: $\vec{BA} = A - B = (x_A - x_B, y_A - y_B, z_A - z_B)$
@@ -94,7 +111,7 @@ $$\vec{BA} \cdot \vec{BC} = |\vec{BA}| |\vec{BC}| \cos(\theta)$$
 
 $$\theta = \arccos \left( \frac{\vec{BA} \cdot \vec{BC}}{|\vec{BA}| |\vec{BC}|} \right)$$
 
-### Normalization (Size Invariance)
+#### Normalization (Size Invariance)
 
 **Shoulder Mid Point:**
 
